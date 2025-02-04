@@ -662,10 +662,15 @@ function refreshPal(_omitUndoRedo) {
 	outCvs.width = 320;
 	var zoom = 2;
 	var cb = document.getElementById("Zoomed");
-	if (cb.checked)
-		zoom = 2;
-	else
+	if (cb.checked) {
+		if (cnt <= 32) {
+			zoom = Math.max(16,cnt >>> 1);
+		} else {
+			zoom = 2;
+		}
+	} else {
 		zoom = 1;
+	}
 	outCvs.height = cnt * zoom;
 	var outContext = outCvs.getContext("2d");
 	var outImageData = outContext.getImageData(0, 0, 320, cnt * zoom);
