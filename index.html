@@ -3,7 +3,7 @@
 
 <!DOCTYPE html>
 <html><head>
-<title>Amiga Gradient Master</title>
+<title>The Gradient Master</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="description" content="" />
@@ -12,6 +12,8 @@
 <link rel="stylesheet" type="text/css" href="css/kickstart.css" media="all" />                  <!-- KICKSTART -->
 <link rel="stylesheet" type="text/css" href="style.css" media="all" />                          <!-- CUSTOM STYLES -->
 <link rel="stylesheet" type="text/css" href="3rdparty/css/colpick.css" media="all"/>            <!-- COLOR PICKER -->
+<link rel="icon" type="image/x-icon" href="icon.ico">
+<link rel="shortcut icon" href="icon.ico"/>
 
 	
 <script type="text/javascript" src="js/3rdparty/jquery.min.js"></script> 
@@ -27,9 +29,11 @@
 	
 <!-- ===============================canvas====== END HEADER ===================================== -->
 <div class="grid">
-<center><h4>The Amiga Gradient Master</h4></center>
+<center><h4>The Gradient Master</h4></center>
 <a href="doc/doc.html">Documentation</a><br>
 <a href="https://www.pouet.net/prod.php?which=81344">Leave a comment on Pouet!</a>
+
+<br>
 <table style="width:100%">
   <tr>
 	<td><div id="content" class="grid"></div></td>
@@ -39,7 +43,13 @@
 	Values per line: <input type='text' id='valperline'  onchange='refreshPal();' value="8">
 	<button class="inset" onclick="loadPal();"><i class="fa fa-pencil fa-fw"></i> Load From Text</button>
 	<br>
-	<select name="xport_type" id="xport_type" onchange='refreshPal();'>
+	<br><br>
+	<select name="platform" id="platform" onchange='onPlatformChosen();'>
+		<option value="Amiga">Export platform: Amiga</option>
+		<option value="STe">Export platform: Atari STe</option>
+	<!--	<option value="ST">Export platform: Atari ST</option> -->
+	</select>
+		<select name="xport_type" id="xport_type" onchange='refreshPal();'>
 		<option value="ASM">Export language: ASM</option>
 		<option value="C">Export language: C</option>
 	  </select>
@@ -52,9 +62,9 @@
 <canvas id='importCvs' style="display:'none'"> </canvas>
 
 <!-- ===================================== START FOOTER ===================================== -->
-<div class="clear"></div>
 <div id="footer">
-<img src="data/logo.png"> All bugs by Soundy
-</div></div>
+	<img src="data/logo.png" style="width:10%">
+	<br>soundydeadliners at gmail.com
+</div>
 
 </body></html>

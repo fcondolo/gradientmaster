@@ -7,6 +7,7 @@ var UNDOREDOINDEX = -1;
 var STORAGE_TIME = null;
 var FREEZE_UNDOREDO = false;
 var LASTSTRING = null;
+var PLATFORM = 'OCS';
 
 function requireElm(_id) {
 	//	if (_id === 'hue')
@@ -250,6 +251,11 @@ function onNew() {
 }
 
 function onLoad() {
+	if (localStorage.platform) {
+		let p = requireElm('platform');
+		p.value = localStorage.getItem('platform');
+		PLATFORM = p.value;
+	}
 	onLineCount(null, false, true);
 	refreshPal(true);
 }
@@ -569,8 +575,8 @@ function refreshPal(_omitUndoRedo) {
 		if (isNaN(val))
 			alert("Unable to parse number");
 		if (curKeyp.lineIndex == i) {
-			r = (val >> 16) & 0xff;
-			g = (val >> 8) & 0xff;
+			r = (val >>> 16) & 0xff;
+			g = (val >>> 8) & 0xff;
 			b = val & 0xff;
 			cr = r;
 			cg = g;
@@ -582,8 +588,8 @@ function refreshPal(_omitUndoRedo) {
 			var nval = parseInt(ns, 16);
 			if (isNaN(nval))
 				alert("Unable to parse number");
-			nr = (nval >> 16) & 0xff;
-			ng = (nval >> 8) & 0xff;
+			nr = (nval >>> 16) & 0xff;
+			ng = (nval >>> 8) & 0xff;
 			nb = nval & 0xff;
 			var deltaLine = nextKeyp.lineIndex - curKeyp.lineIndex;
 			if (deltaLine > 0) {
@@ -675,6 +681,7 @@ function refreshPal(_omitUndoRedo) {
 
 	var vperl = parseInt(document.getElementById('valperline').value);
 	if (xportASM) {
+		xp.value += "\n; Taget Platform: " + PLATFORM + "\n";
 		xp.value += "\npalette:\n";
 		xp.value += "; colors count: " + cnt + "\n";
 		xp.value += "\n\tdc.w\t\t";	
@@ -701,8 +708,8 @@ function refreshPal(_omitUndoRedo) {
 					else
 						ln--;
 				}
-				var tr = (colors[ln] >> 16) & 0xff
-				var tg = (colors[ln] >> 8) & 0xff;
+				var tr = (colors[ln] >>> 16) & 0xff
+				var tg = (colors[ln] >>> 8) & 0xff;
 				var tb = (colors[ln]) & 0xff;
 				if (shuffled >= 1) {
 					if (err_r >= 0x10) {
@@ -759,9 +766,18 @@ function refreshPal(_omitUndoRedo) {
 				outPixels[index++] = 255;
 
 				if ((x === 0) && (z === 0)) {
-					tr >>= 4;
-					tg >>= 4;
-					tb >>= 4;
+					tr >>>= 4;
+					tg >>>= 4;
+					tb >>>= 4;
+					if (PLATFORM == 'STe') {
+						tr = componentToSTE(tr);
+						tg = componentToSTE(tg);
+						tb = componentToSTE(tb);
+					} else if (PLATFORM == 'ST') {
+						tr >>>= 1;
+						tg >>>= 1;
+						tb >>>= 1;
+					}
 					xp.value += hex + tr.toString(16) + tg.toString(16) + tb.toString(16);
 					if (y != cnt - 1) {
 						if ((y % vperl) == (vperl - 1)) {
@@ -1053,9 +1069,9 @@ function clampPalEntry(_e) {
 	var r = _e.r & 0xf0;
 	var g = _e.g & 0xf0;
 	var b = _e.b & 0xf0;
-	r >>= 4;
-	g >>= 4;
-	b >>= 4;
+	r >>>= 4;
+	g >>>= 4;
+	b >>>= 4;
 	return r.toString(16) + g.toString(16) + b.toString(16);
 }
 
@@ -1078,18 +1094,27 @@ function nearestPalEntry(_e) {
 	if (b > 0xf0)
 		b = 0xf0;
 
-	r >>= 4;
-	g >>= 4;
-	b >>= 4;
+	r >>>= 4;
+	g >>>= 4;
+	b >>>= 4;
 	return r.toString(16) + g.toString(16) + b.toString(16);
 }
+
+function componentToSTE(_c) {
+	const _0 = _c & 1;
+	const _1 = (_c & 2) >> 1;
+	const _2 = (_c & 4) >> 2;
+	const _3 = (_c & 8) >> 3;
+	return _1 | (_2 << 1)| (_3 << 2)| (_0 << 3)
+}
+
 
 function xportPalette() {
 	var t = this;
 	var i = 0;
 
 	var xp = document.getElementById('export');
-	xp.value = "palette:\n";
+	xp.value = "; taget platform: " + PLATFORM + "\npalette:\n";
 
 	xp.value += "; colors count: " + origImg.height + "\n";
 	for (var y = 0; y < origImg.height; y++) {
@@ -1097,9 +1122,18 @@ function xportPalette() {
 			var r = origImgPixels[y * 4 * origImg.width];
 			var g = origImgPixels[y * 4 * origImg.width + 1];
 			var b = origImgPixels[y * 4 * origImg.width + 2];
-			r >>= 4;
-			g >>= 4;
-			b >>= 4;
+			r >>>= 4;
+			g >>>= 4;
+			b >>>= 4;
+			if (PLATFORM == 'STe') {
+				r = componentToSTE(r);
+				g = componentToSTE(g);
+				b = componentToSTE(b);
+			} else if (PLATFORM == 'ST') {
+				r >>>= 1;
+				g >>>= 1;
+				b >>>= 1;
+			}
 			xp.value += "\tdc.w\t$" + r.toString(16) + g.toString(16) + b.toString(16) + "\n";
 		}
 	}
@@ -1110,9 +1144,18 @@ function xportPalette() {
 function xportNearest() {
 	palettize(origImgPixels, origImg.width, origImg.height);
 	var xp = document.getElementById('export');
-	xp.value = "colors_count:\tdc.w " + global_palette.length.toString() + "\npalette:\tdc.w\t";
+	xp.value = "; taget platform: " + PLATFORM + "\n";
+	xp.value += "colors_count:\tdc.w " + global_palette.length.toString() + "\npalette:\tdc.w\t";
 	for (var i = 0; i < global_palette.length; i++) {
 		xp.value += "$" + nearestPalEntry(global_palette[i]);
 		if (i < global_palette.length - 1) xp.value += ",";
 	}
+}
+
+
+function onPlatformChosen() {
+	let p = requireElm('platform');
+	localStorage.setItem('platform', p.value);
+	PLATFORM = p.value;
+	refreshPal();
 }
