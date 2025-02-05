@@ -41,9 +41,10 @@
   </tr> 
 </table> 	 
 	Values per line: <input type='text' id='valperline'  onchange='refreshPal();' value="8">
-	<button class="inset" onclick="loadPal();"><i class="fa fa-pencil fa-fw"></i> Load From Text</button>
 	<br>
-	<br><br>
+	<br><button class="inset" onclick="loadPal();"><i class="fa fa-pencil fa-fw"></i> Load From grdmstr_data</button>
+	<br><button class="inset" onclick="loadDCW();"><i class="fa fa-pencil fa-fw"></i> Load From dc.w list</button>
+	<br>
 	<select name="platform" id="platform" onchange='onPlatformChosen();'>
 		<option value="Amiga">Export platform: Amiga</option>
 		<option value="STe">Export platform: Atari STe</option>

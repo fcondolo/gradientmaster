@@ -364,6 +364,140 @@ function loadPal(_fromLocalStorage, _omitUndoRedo, _forcedString) {
 	return true;
 }
 
+function getTextLine(_t) {
+	ret = "";
+	while(_t.index < _t.chars.length) {
+		var c = _t.chars[_t.index++];
+		if (c === '\n')
+			break;
+		if (c === ';')
+		break;
+		if (
+			(c === ' ') ||
+			(c === '\t')
+		)
+			continue;
+		ret += c;
+	}
+	if ((ret.length < 2) && (_t.index >= _t.chars.length-1))
+		_t.over = true;
+	return ret;
+}
+
+function isHexChar(_c) {
+	switch(_c) {
+		case '0' : return true;
+		case '1' : return true;
+		case '2' : return true;
+		case '3' : return true;
+		case '4' : return true;
+		case '5' : return true;
+		case '6' : return true;
+		case '7' : return true;
+		case '8' : return true;
+		case '9' : return true;
+		case 'a' : return true;
+		case 'A' : return true;
+		case 'b' : return true;
+		case 'B' : return true;
+		case 'c' : return true;
+		case 'C' : return true;
+		case 'd' : return true;
+		case 'D' : return true;
+		case 'e' : return true;
+		case 'E' : return true;
+		case 'f' : return true;
+		case 'F' : return true;
+		default: return false;
+	}
+}
+
+function ST_ColConvertSTEto255(_v) {
+	const _3 = (_v & 0b0100) >> 2;
+	const _2 = (_v & 0b0010) >> 1;
+	const _1 = (_v & 0b0001);
+	const _0 = (_v & 0b1000) >> 3;
+	const col = _0 | (_1<<1) | (_2<<2) | (_3<<3);
+	return col * 16;
+}
+
+
+function loadDCW() {
+	KeyPts = [];
+	var txt = {index:0,chars:document.getElementById('export').value,over:false,writeIndex:0};
+	var lineNum = -1;
+	while (true) {
+		lineNum++;
+		const chars = getTextLine(txt);
+		if (txt.over)
+			break;
+		// find dc.w
+		var ok = false;
+		var index = 0;
+		if (chars[index] == 0)
+			break;
+		if (
+			((chars[index] === 'd') || (chars[index] === 'D')) &&
+			((chars[index + 1] === 'c') || (chars[index + 1] === 'C')) &&
+			(chars[index + 2] === '.') &&
+			((chars[index + 3] === 'w') || (chars[index + 3] === 'W'))
+		) {
+			ok = true;
+		}
+		index += 4;
+		if (!ok) {
+			continue;
+		}
+		while(index < chars.length) {
+			// find the next number
+			if (chars[index] == ',') {
+				index++;
+				continue;
+			}
+
+			if (chars[index++] !== '$')
+			{
+				alert("expected '$' after dc.w at line " + lineNum + " in: " + chars);
+				continue;
+			}
+			var num = "";
+			while (index < chars.length) {
+				if (isHexChar(chars[index]))
+				{
+					num += chars[index];
+				} else break;
+				index++;
+			}
+			
+			var hexnum = parseInt(num,16);
+			if (isNaN(hexnum)) {
+				alert("expected hex number after '$' at line " + lineNum + " but found: " + num + " in: " + chars);
+				continue;
+			}
+			var b = hexnum & 15;
+			var g = (hexnum>>4) & 15;
+			var r = (hexnum>>8) & 15;
+			if (PLATFORM == 'STe') {
+				r = ST_ColConvertSTEto255(r);
+				g = ST_ColConvertSTEto255(g);
+				b = ST_ColConvertSTEto255(b);
+			} else {
+				r <<= 4;
+				g <<= 4;
+				b <<= 4;
+			}
+			const col = (r<<16)|(g<<8)|b;
+			KeyPts.push({ colorValue: col, lineIndex: KeyPts.length, weight: 1, shuffle: 0, id: "" });
+		}
+	}
+
+	setOptElmVal('linecount', KeyPts.length);
+	setOptElmVal('hue', 50);
+	setOptElmVal('saturation', 50);
+	setOptElmVal('value', 50);
+
+	onLineCount({ lines: KeyPts.length, hue: 50, sat: 50, val: 50 });
+}
 
 
 function onImageDropped() {
