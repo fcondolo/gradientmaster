@@ -10,4 +10,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 This tool is using: 
 - HTML KickStart by Joshua Gatcke
 - ColPick.js by Moritz Kornher, Jose Vargas, Stefan Petre
-Please check the respective licenses in the "js/3rdparty" folder
+Please check the respective licenses in the "js/3rdparty" folder (MIT too)
