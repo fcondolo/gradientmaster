@@ -477,14 +477,19 @@ function loadDCW() {
 			var b = hexnum & 15;
 			var g = (hexnum>>4) & 15;
 			var r = (hexnum>>8) & 15;
-			if (PLATFORM == 'STe') {
-				r = ST_ColConvertSTEto255(r);
-				g = ST_ColConvertSTEto255(g);
-				b = ST_ColConvertSTEto255(b);
-			} else {
-				r <<= 4;
-				g <<= 4;
-				b <<= 4;
+			switch (PLATFORM) {
+				case 'OCS':
+					r <<= 4;
+					g <<= 4;
+					b <<= 4;
+				break;
+				case 'STe':
+					r = ST_ColConvertSTEto255(r);
+					g = ST_ColConvertSTEto255(g);
+					b = ST_ColConvertSTEto255(b);
+				break;
+				default:
+				break;
 			}
 			const col = (r<<16)|(g<<8)|b;
 			KeyPts.push({ colorValue: col, lineIndex: KeyPts.length, weight: 1, shuffle: 0, id: "" });
@@ -905,17 +910,20 @@ function refreshPal(_omitUndoRedo) {
 				outPixels[index++] = 255;
 
 				if ((x === 0) && (z === 0)) {
-					tr >>>= 4;
-					tg >>>= 4;
-					tb >>>= 4;
-					if (PLATFORM == 'STe') {
-						tr = componentToSTE(tr);
-						tg = componentToSTE(tg);
-						tb = componentToSTE(tb);
-					} else if (PLATFORM == 'ST') {
-						tr >>>= 1;
-						tg >>>= 1;
-						tb >>>= 1;
+					if (PLATFORM == 'RGB24') {
+					} else {
+						tr >>>= 4;
+						tg >>>= 4;
+						tb >>>= 4;
+						if (PLATFORM == 'STe') {
+							tr = componentToSTE(tr);
+							tg = componentToSTE(tg);
+							tb = componentToSTE(tb);
+						} else if (PLATFORM == 'ST') {
+							tr >>>= 1;
+							tg >>>= 1;
+							tb >>>= 1;
+						}
 					}
 					xp.value += hex + tr.toString(16) + tg.toString(16) + tb.toString(16);
 					if (y != cnt - 1) {
@@ -1261,17 +1269,21 @@ function xportPalette() {
 			var r = origImgPixels[y * 4 * origImg.width];
 			var g = origImgPixels[y * 4 * origImg.width + 1];
 			var b = origImgPixels[y * 4 * origImg.width + 2];
-			r >>>= 4;
-			g >>>= 4;
-			b >>>= 4;
-			if (PLATFORM == 'STe') {
-				r = componentToSTE(r);
-				g = componentToSTE(g);
-				b = componentToSTE(b);
-			} else if (PLATFORM == 'ST') {
-				r >>>= 1;
-				g >>>= 1;
-				b >>>= 1;
+			if (PLATFORM == 'RBG24') {
+
+			} else {
+				r >>>= 4;
+				g >>>= 4;
+				b >>>= 4;
+				if (PLATFORM == 'STe') {
+					r = componentToSTE(r);
+					g = componentToSTE(g);
+					b = componentToSTE(b);
+				} else if (PLATFORM == 'ST') {
+					r >>>= 1;
+					g >>>= 1;
+					b >>>= 1;
+				}
 			}
 			xp.value += "\tdc.w\t$" + r.toString(16) + g.toString(16) + b.toString(16) + "\n";
 		}
