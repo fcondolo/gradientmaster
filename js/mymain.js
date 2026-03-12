@@ -828,9 +828,15 @@ function refreshPal(_omitUndoRedo) {
 		xp.value += "\n; Taget Platform: " + PLATFORM + "\n";
 		xp.value += "\npalette:\n";
 		xp.value += "; colors count: " + cnt + "\n";
-		xp.value += "\n\tdc.w\t\t";	
+		if (PLATFORM == 'RGB24')
+			xp.value += "\n\tdc.l\t\t";	
+		else
+			xp.value += "\n\tdc.w\t\t";	
 	} else {
-		xp.value += '\t\tUWORD palette[] __attribute__((section (".MEMF_CHIP"))) = {\n\t\t\t';
+		if (PLATFORM == 'RGB24')
+			xp.value += '\t\tUWORD palette[] __attribute__((section (".MEMF_CHIP"))) = {\n\t\t\t';
+		else
+			xp.value += '\t\tULONG palette[] __attribute__((section (".MEMF_CHIP"))) = {\n\t\t\t';
 	}
 
 	for (var y = 0; y < cnt; y++) {
@@ -904,10 +910,17 @@ function refreshPal(_omitUndoRedo) {
 					}
 				}
 
-				outPixels[index++] = tr & 0xf0;
-				outPixels[index++] = tg & 0xf0;
-				outPixels[index++] = tb & 0xf0;
-				outPixels[index++] = 255;
+				if (PLATFORM == 'RGB24') {
+					outPixels[index++] = tr;
+					outPixels[index++] = tg;
+					outPixels[index++] = tb;
+					outPixels[index++] = 255;
+				} else {
+					outPixels[index++] = tr & 0xf0;
+					outPixels[index++] = tg & 0xf0;
+					outPixels[index++] = tb & 0xf0;
+					outPixels[index++] = 255;
+				}
 
 				if ((x === 0) && (z === 0)) {
 					if (PLATFORM == 'RGB24') {
@@ -928,8 +941,12 @@ function refreshPal(_omitUndoRedo) {
 					xp.value += hex + tr.toString(16) + tg.toString(16) + tb.toString(16);
 					if (y != cnt - 1) {
 						if ((y % vperl) == (vperl - 1)) {
-							if (xportASM)
-								xp.value += "\n\tdc.w\t\t";
+							if (xportASM) {
+								if (PLATFORM == 'RGB24')
+									xp.value += "\n\tdc.l\t\t";
+								else
+									xp.value += "\n\tdc.w\t\t";
+							}
 							else
 								xp.value += ",\n\t\t\t";
 						}
@@ -1174,6 +1191,8 @@ function nearestCol(_r, _g, _b) {
 }
 
 function nearest(val) {
+	if (PLATFORM == 'RGB24')
+		return val;
 	var res = val & 0xf0;
 	if ((val & 15) >= 8)
 		res += 0x10;
@@ -1213,37 +1232,52 @@ function palettize(_refPix, _width, _height) {
 }
 
 function clampPalEntry(_e) {
-	var r = _e.r & 0xf0;
-	var g = _e.g & 0xf0;
-	var b = _e.b & 0xf0;
-	r >>>= 4;
-	g >>>= 4;
-	b >>>= 4;
+	var r,g,b;
+	if (PLATFORM == 'RGB24') {
+		r = _e.r;
+		g = _e.g;
+		b = _e.b;
+	} else {
+		r = _e.r & 0xf0;
+		g = _e.g & 0xf0;
+		b = _e.b & 0xf0;
+		r >>>= 4;
+		g >>>= 4;
+		b >>>= 4;
+	}
 	return r.toString(16) + g.toString(16) + b.toString(16);
 }
 
 function nearestPalEntry(_e) {
-	var r = _e.r & 0xf0;
-	if ((r & 15) >= 8)
-		r += 0x10;
-	if (r > 0xf0)
-		r = 0xf0;
+	var r,g,b;
 
-	var g = _e.g & 0xf0;
-	if ((g & 15) >= 8)
-		g += 0x10;
-	if (g > 0xf0)
-		g = 0xf0;
+	if (PLATFORM == 'RGB24') {
+		r = _e.r;
+		g = _e.g;
+		b = _e.b;
+	} else {
+		r = _e.r & 0xf0;
+		if ((r & 15) >= 8)
+			r += 0x10;
+		if (r > 0xf0)
+			r = 0xf0;
 
-	var b = _e.b & 0xf0;
-	if ((b & 15) >= 8)
-		b += 0x10;
-	if (b > 0xf0)
-		b = 0xf0;
+		g = _e.g & 0xf0;
+		if ((g & 15) >= 8)
+			g += 0x10;
+		if (g > 0xf0)
+			g = 0xf0;
 
-	r >>>= 4;
-	g >>>= 4;
-	b >>>= 4;
+		b = _e.b & 0xf0;
+		if ((b & 15) >= 8)
+			b += 0x10;
+		if (b > 0xf0)
+			b = 0xf0;
+
+		r >>>= 4;
+		g >>>= 4;
+		b >>>= 4;
+	}
 	return r.toString(16) + g.toString(16) + b.toString(16);
 }
 
