@@ -659,17 +659,45 @@ function refreshPal(_omitUndoRedo) {
 	var val = getOptElmIntVal('value', 50);
 	var xp = document.getElementById('export');
 	let xportASM = true;
-	let comment = ';';
+	let comment = '; ';
+	let tablePrefix = "";
+	let tableSuffix = "";
+	let multicommentOpen = '\tIFD NOPE\n';
+	let multicommentClose = '\tENDC\n';
 	let hex = '$';
 	if (document.getElementById("xport_type").value == "C") {
-		xportASM = false;		
-		comment = '//';
-		hex = '0x0';
+		xportASM = false;
+		comment = '// ';
+		multicommentOpen = '/* ';
+		multicommentClose = ' */';
+		tableSuffix = "};";
+		if (PLATFORM == 'RGB24') {
+			hex = '0x';
+			tablePrefix = 'ULONG palette[] __attribute__((section (".MEMF_CHIP"))) = ';
+		}
+		else {
+			hex = '0x0';
+			tablePrefix = 'UWORD palette[] __attribute__((section (".MEMF_CHIP"))) = ';
+		}
+	}
+	if (document.getElementById("xport_type").value == "LUA") {
+		xportASM = false;
+		comment = '-- ';
+		multicommentOpen = '--[[ ';
+		multicommentClose = ' ]]';
+		tablePrefix = 'palette = ';
+		tableSuffix = "}";
+		if (PLATFORM == 'RGB24') {
+			hex = '0x';
+		}
+		else {
+			hex = '0x0';
+		}
 	}
 
 	const cnt = getOptElmIntVal('linecount', 256);
 	xp.value = "";
-	if (!xportASM) xp.value += "/*\n";
+	if (!xportASM) xp.value += multicommentOpen + "\n";
 	xp.value += ";grdmstr_data:" + KeyPts.length + "," + cnt + "\n";
 	xp.value += ";hsv:" + vhue + "," + sat + "," + val + "\n";	
 
@@ -686,7 +714,7 @@ function refreshPal(_omitUndoRedo) {
 		xp.value += "," + KeyPts[ii].weight;
 		xp.value += "," + KeyPts[ii].shuffle + "\n";
 	}
-	if (!xportASM) xp.value += "*/\n";
+	if (!xportASM) xp.value += multicommentClose + "\n";
 	LASTSTRING = xp.value;
 
 	var str = "";//"<table style='width:100%'>";
@@ -833,10 +861,7 @@ function refreshPal(_omitUndoRedo) {
 		else
 			xp.value += "\n\tdc.w\t\t";	
 	} else {
-		if (PLATFORM == 'RGB24')
-			xp.value += '\t\tUWORD palette[] __attribute__((section (".MEMF_CHIP"))) = {\n\t\t\t';
-		else
-			xp.value += '\t\tULONG palette[] __attribute__((section (".MEMF_CHIP"))) = {\n\t\t\t';
+		xp.value += '\t\t'+tablePrefix+'{\n\t\t\t';
 	}
 
 	for (var y = 0; y < cnt; y++) {
@@ -956,8 +981,9 @@ function refreshPal(_omitUndoRedo) {
 			}
 		}
 	}
-	if (!xportASM)
-		xp.value += "\n\t\t};";
+	if (!xportASM) {
+		xp.value += "\n\t\t"+tableSuffix;
+	}
 	outContext.putImageData(outImageData, 0, 0);
 	if (_omitUndoRedo !== true)
 		updateUndoRedo();
@@ -1232,7 +1258,8 @@ function palettize(_refPix, _width, _height) {
 }
 
 function twodigitHex(_v) {
-	if (_v < 16) return "0"+_v.toString(16);
+	if ((PLATFORM == 'RGB24') && (_v < 16))
+		return "0"+_v.toString(16);
 	return _v.toString(16);
 }
 
@@ -1242,7 +1269,6 @@ function clampPalEntry(_e) {
 		r = _e.r;
 		g = _e.g;
 		b = _e.b;
-		return twodigitHex(r) + twodigitHex(g) + twodigitHex(b);
 	} else {
 		r = _e.r & 0xf0;
 		g = _e.g & 0xf0;
@@ -1251,7 +1277,7 @@ function clampPalEntry(_e) {
 		g >>>= 4;
 		b >>>= 4;
 	}
-	return r.toString(16) + g.toString(16) + b.toString(16);
+	return twodigitHex(r) + twodigitHex(g) + twodigitHex(b);
 }
 
 function nearestPalEntry(_e) {
@@ -1261,7 +1287,6 @@ function nearestPalEntry(_e) {
 		r = _e.r;
 		g = _e.g;
 		b = _e.b;
-		return twodigitHex(r) + twodigitHex(g) + twodigitHex(b);
 	} else {
 		r = _e.r & 0xf0;
 		if ((r & 15) >= 8)
@@ -1285,7 +1310,7 @@ function nearestPalEntry(_e) {
 		g >>>= 4;
 		b >>>= 4;
 	}
-	return r.toString(16) + g.toString(16) + b.toString(16);
+	return twodigitHex(r) + twodigitHex(g) + twodigitHex(b);
 }
 
 function componentToSTE(_c) {
