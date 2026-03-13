@@ -682,7 +682,7 @@ function refreshPal(_omitUndoRedo) {
 			iicol = iicol.substr(1);
 		var iival = parseInt(iicol, 16);
 		KeyPts[ii].colorValue = iival;
-		xp.value += ';' + KeyPts[ii].lineIndex + ":#" + iival.toString(16);
+		xp.value += ';' + KeyPts[ii].lineIndex + ":#" + twodigitHex(iival);
 		xp.value += "," + KeyPts[ii].weight;
 		xp.value += "," + KeyPts[ii].shuffle + "\n";
 	}
@@ -791,7 +791,7 @@ function refreshPal(_omitUndoRedo) {
 
 		//val = nearestCol(r,g,b);
 		colors[i] = val;
-		var sval = val.toString(16);
+		var sval = twodigitHex(val);
 		r += pr[i];
 		g += pg[i];
 		b += pb[i];
@@ -938,7 +938,7 @@ function refreshPal(_omitUndoRedo) {
 							tb >>>= 1;
 						}
 					}
-					xp.value += hex + tr.toString(16) + tg.toString(16) + tb.toString(16);
+					xp.value += hex + twodigitHex(tr) + twodigitHex(tg) + twodigitHex(tb);
 					if (y != cnt - 1) {
 						if ((y % vperl) == (vperl - 1)) {
 							if (xportASM) {
@@ -1231,12 +1231,18 @@ function palettize(_refPix, _width, _height) {
 	}
 }
 
+function twodigitHex(_v) {
+	if (_v < 16) return "0"+_v.toString(16);
+	return _v.toString(16);
+}
+
 function clampPalEntry(_e) {
 	var r,g,b;
 	if (PLATFORM == 'RGB24') {
 		r = _e.r;
 		g = _e.g;
 		b = _e.b;
+		return twodigitHex(r) + twodigitHex(g) + twodigitHex(b);
 	} else {
 		r = _e.r & 0xf0;
 		g = _e.g & 0xf0;
@@ -1255,6 +1261,7 @@ function nearestPalEntry(_e) {
 		r = _e.r;
 		g = _e.g;
 		b = _e.b;
+		return twodigitHex(r) + twodigitHex(g) + twodigitHex(b);
 	} else {
 		r = _e.r & 0xf0;
 		if ((r & 15) >= 8)
@@ -1319,7 +1326,7 @@ function xportPalette() {
 					b >>>= 1;
 				}
 			}
-			xp.value += "\tdc.w\t$" + r.toString(16) + g.toString(16) + b.toString(16) + "\n";
+			xp.value += "\tdc.w\t$" + twodigitHex(r) + twodigitHex(g) + twodigitHex(b) + "\n";
 		}
 	}
 
